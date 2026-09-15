@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Planner</title>
 <style>
 :root{
@@ -38,12 +38,19 @@ button{cursor:pointer}
   display:flex;align-items:center;justify-content:space-between;gap:12px;
 }
 .brand{font-weight:800;letter-spacing:-.03em;font-size:22px;color:#fff}
-.header-actions{display:flex;gap:8px}
+.header-actions{display:flex;gap:8px;align-items:center}
 .ghost{
   border:1px solid rgba(255,255,255,.35);
   background:rgba(255,255,255,.1);
   color:white;border-radius:10px;padding:8px 11px
 }
+.sync-pill{
+  display:flex;align-items:center;gap:6px;
+  color:#fff;font-size:11px;opacity:.9
+}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#d5d5d5}
+.sync-dot.online{background:#74d680;box-shadow:0 0 10px rgba(116,214,128,.7)}
+.sync-dot.local{background:#e5b35c}
 .section-label{
   color:#fff;font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.08em
 }
@@ -61,18 +68,17 @@ button{cursor:pointer}
   padding:15px 15px 13px;
   box-shadow:var(--shadow);
   position:relative;
-  cursor:pointer;
+  cursor:grab;
   display:flex;flex-direction:column;justify-content:space-between;gap:12px;
+  touch-action:none;
+  user-select:none;
 }
+.inbox-card:active{cursor:grabbing}
 .inbox-card.overdue{
   box-shadow:0 0 0 1px rgba(255,91,77,.45), 0 0 22px rgba(255,91,77,.25);
 }
-.inbox-title{
-  font-weight:700;font-size:14px;line-height:1.3;padding-right:24px;
-}
-.badge{
-  display:inline-flex;align-items:center;gap:6px;font-size:10px;color:#d5d5d5
-}
+.inbox-title{font-weight:700;font-size:14px;line-height:1.3;padding-right:24px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:#d5d5d5}
 .dot-alert{
   width:7px;height:7px;border-radius:50%;background:var(--danger);
   box-shadow:0 0 10px rgba(255,91,77,.85)
@@ -88,25 +94,16 @@ button{cursor:pointer}
   border-radius:0;
   box-shadow:var(--shadow);
 }
-.quick-date{
-  font-family:Georgia,serif;
-  font-size:19px;
-  margin-bottom:16px;
-}
+.quick-date{font-family:Georgia,serif;font-size:19px;margin-bottom:16px}
 .quick-form{display:grid;gap:10px}
-.title-line{
-  display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center
-}
-.quick-form input,.quick-form textarea,.quick-form select,
-.modal input,.modal textarea,.modal select{
+.quick-form input,.quick-form textarea,
+.modal input,.modal textarea{
   width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;
   padding:9px 2px;outline:none;color:var(--ink)
 }
 .quick-form textarea,.modal textarea{resize:vertical;min-height:64px}
 .meta-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.category-row{
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap
-}
+.category-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cat-btn{
   width:12px;height:12px;border-radius:50%;border:0;padding:0;outline:2px solid transparent
 }
@@ -132,7 +129,7 @@ button{cursor:pointer}
 }
 .cal-title{font-size:13px;font-weight:700}
 .cal-actions{display:flex;gap:7px;align-items:center}
-.cal-actions button,.cal-actions select{
+.cal-actions button{
   border:1px solid var(--line);background:#eef0ec;border-radius:8px;padding:6px 8px;color:#5b6158;font-size:11px
 }
 .week-head{
@@ -160,18 +157,22 @@ button{cursor:pointer}
   font-size:9px;color:var(--muted)
 }
 .day-col{position:relative;border-right:1px solid var(--line)}
-.hour-line{
-  position:absolute;left:0;right:0;border-top:1px solid #edf0eb
-}
+.day-col.drop-active{background:rgba(80,118,139,.08)}
+.hour-line{position:absolute;left:0;right:0;border-top:1px solid #edf0eb}
+.half-line{position:absolute;left:0;right:0;border-top:1px dashed #f1f2ef}
 .event{
   position:absolute;left:5px;right:5px;
   min-height:28px;border-radius:7px;
   padding:5px 7px;
   font-size:10px;font-weight:700;line-height:1.2;
-  overflow:hidden;cursor:pointer;
+  overflow:hidden;cursor:grab;
   border:1px solid rgba(0,0,0,.06);
-  color:#2c332b
+  color:#2c332b;
+  touch-action:none;
+  user-select:none;
+  z-index:3;
 }
+.event:active{cursor:grabbing}
 .event .time{font-size:9px;font-weight:500;opacity:.75;margin-bottom:2px}
 .event.baltic{background:#dbe7d5}
 .event.work{background:#d3e1e7}
@@ -184,16 +185,16 @@ button{cursor:pointer}
 .now-line::before{
   content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:#ff4a46;left:-3px;top:-3px
 }
-.completed-drawer{
+.completed-drawer,.sync-drawer{
   position:fixed;inset:0;background:rgba(0,0,0,.28);display:none;align-items:stretch;justify-content:flex-end;z-index:20
 }
-.completed-drawer.show{display:flex}
+.completed-drawer.show,.sync-drawer.show{display:flex}
 .drawer{
   width:min(430px,92vw);background:#f4f5f0;padding:22px;overflow:auto;box-shadow:-20px 0 50px rgba(0,0,0,.12)
 }
 .drawer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .drawer-list{display:grid;gap:10px}
-.done-card{background:white;border:1px solid var(--line);border-radius:14px;padding:12px}
+.done-card{background:white;border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
 .done-card strong{display:block;margin-bottom:5px}
 .done-card small{color:var(--muted)}
 .modal-backdrop{
@@ -204,29 +205,59 @@ button{cursor:pointer}
   width:min(520px,96vw);background:var(--panel);padding:22px;border-radius:16px;box-shadow:0 22px 70px rgba(0,0,0,.22)
 }
 .modal h3{margin:0 0 14px}
-.modal-description{
-  white-space:pre-wrap;color:#596056;font-size:14px;line-height:1.5;margin:10px 0 16px
-}
+.modal-description{white-space:pre-wrap;color:#596056;font-size:14px;line-height:1.5;margin:10px 0 16px}
 .modal-meta{font-size:12px;color:var(--muted);margin-bottom:14px}
 .modal-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
 .modal-actions button{border:1px solid var(--line);background:#fff;padding:9px 12px;border-radius:9px}
 .modal-actions .done{background:#304131;color:white;border-color:#304131}
 .modal-actions .delete{color:#b1443d}
 .reschedule{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.sync-box{display:grid;gap:12px}
+.sync-box input{
+  width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 12px
+}
+.sync-note{font-size:12px;line-height:1.45;color:#747a71}
+.sync-state{
+  padding:10px 12px;border-radius:10px;background:white;border:1px solid var(--line);font-size:12px
+}
+.drag-clone{
+  position:fixed!important;pointer-events:none!important;z-index:9999!important;opacity:.88!important;
+  transform:scale(.98);box-shadow:0 16px 40px rgba(0,0,0,.2)!important
+}
 @media(max-width:1000px){
-  .app{grid-template-columns:1fr;padding:16px}
+  .app{grid-template-columns:1fr;padding:14px}
   .left{min-height:auto}
   .calendar-wrap{min-height:760px}
+  .inbox{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  .app{padding:8px;gap:14px}
+  .inbox{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .calendar-wrap{min-height:690px}
+  .calendar-grid{min-width:760px}
+  .week-head{min-width:760px}
+  .grid-shell{overflow:auto}
+  .quick-add{padding:14px}
+  .meta-row{grid-template-columns:1fr}
+  .brand{font-size:18px}
 }
 </style>
 </head>
 <body>
+
 <div class="app">
   <section class="left">
     <div class="top-left">
       <div class="header">
-        <div class="brand">planner</div>
+        <div>
+          <div class="brand">planner</div>
+          <div class="sync-pill">
+            <span id="syncDot" class="sync-dot local"></span>
+            <span id="syncText">локальный режим</span>
+          </div>
+        </div>
         <div class="header-actions">
+          <button class="ghost" id="syncBtn">Синхронизация</button>
           <button class="ghost" id="completedBtn">Выполнено</button>
         </div>
       </div>
@@ -238,7 +269,7 @@ button{cursor:pointer}
     <div class="quick-add">
       <div class="quick-date" id="todayLabel"></div>
       <form class="quick-form" id="quickForm">
-        <input id="taskTitle" required placeholder="Что нужно сделать в этот день?">
+        <input id="taskTitle" required placeholder="Что нужно сделать?">
         <textarea id="taskDesc" placeholder="Описание задачи"></textarea>
 
         <div class="meta-row">
@@ -271,7 +302,7 @@ button{cursor:pointer}
     </div>
 
     <div class="week-head" id="weekHead"></div>
-    <div class="grid-shell">
+    <div class="grid-shell" id="gridShell">
       <div class="calendar-grid" id="calendarGrid"></div>
     </div>
   </section>
@@ -287,11 +318,70 @@ button{cursor:pointer}
   </aside>
 </div>
 
+<div class="sync-drawer" id="syncDrawer">
+  <aside class="drawer">
+    <div class="drawer-head">
+      <h2 style="margin:0">Синхронизация</h2>
+      <button id="closeSync">×</button>
+    </div>
+    <div class="sync-box">
+      <div class="sync-note">
+        Введи одинаковый ID на компьютере и телефоне. Например: <b>dina-2026-x7k2</b>.
+        Лучше использовать длинный ID, который сложно угадать.
+      </div>
+      <input id="workspaceId" placeholder="ID пространства">
+      <button class="primary" id="connectWorkspace" type="button">Подключить</button>
+      <button class="ghost" style="color:#333;border-color:#ccc;background:#fff" id="disconnectWorkspace" type="button">Отключить облако</button>
+      <div class="sync-state" id="syncState">Сейчас задачи хранятся только на этом устройстве.</div>
+      <div class="sync-note">
+        Для облачной синхронизации нужно один раз подключить Firebase в коде.
+        После этого изменения будут появляться на обоих устройствах почти сразу.
+      </div>
+    </div>
+  </aside>
+</div>
+
 <div class="modal-backdrop" id="taskModal">
   <div class="modal" id="taskModalCard"></div>
 </div>
 
-<script>
+<script type="module">
+/*
+=========================================================
+1. СОЗДАЙ FIREBASE PROJECT
+2. В Firebase Console -> Project settings -> Your apps -> Web
+3. ВСТАВЬ СВОИ ЗНАЧЕНИЯ ВМЕСТО ТЕКСТА НИЖЕ
+=========================================================
+*/
+const firebaseConfig = {
+  apiKey: "PASTE_API_KEY_HERE",
+  authDomain: "PASTE_AUTH_DOMAIN_HERE",
+  databaseURL: "PASTE_DATABASE_URL_HERE",
+  projectId: "PASTE_PROJECT_ID_HERE",
+  storageBucket: "PASTE_STORAGE_BUCKET_HERE",
+  messagingSenderId: "PASTE_MESSAGING_SENDER_ID_HERE",
+  appId: "PASTE_APP_ID_HERE"
+};
+
+const firebaseConfigured = !Object.values(firebaseConfig).some(v => String(v).includes("PASTE_"));
+
+let firebase = null;
+let db = null;
+let currentRoomRef = null;
+let unsubscribeRoom = null;
+
+if(firebaseConfigured){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js");
+    const dbMod = await import("https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = dbMod.getDatabase(app);
+    firebase = dbMod;
+  }catch(err){
+    console.error("Firebase init error:", err);
+  }
+}
+
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
@@ -303,21 +393,100 @@ const categoryNames = {
   other:'Другое'
 };
 
-let tasks = JSON.parse(localStorage.getItem('planner_v2_tasks') || '[]');
+let tasks = JSON.parse(localStorage.getItem('planner_v3_tasks') || '[]');
 let activeCategory = 'baltic';
 let weekStart = getMonday(new Date());
+let workspaceId = localStorage.getItem('planner_workspace_id') || '';
+let cloudMode = false;
+let cloudLoadedOnce = false;
 
-function save(){
-  localStorage.setItem('planner_v2_tasks', JSON.stringify(tasks));
+const startHour = 8;
+const endHour = 23;
+const pxPerHour = 60;
+
+function saveLocal(){
+  localStorage.setItem('planner_v3_tasks', JSON.stringify(tasks));
 }
+
+async function hashRoomId(value){
+  const data = new TextEncoder().encode(value.trim());
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function connectCloud(id){
+  const clean = id.trim();
+  if(!clean) return alert("Введи ID.");
+  if(!firebaseConfigured || !firebase || !db){
+    $('#syncState').textContent = "Firebase ещё не подключён в index.html. Пока работает только локальный режим.";
+    return;
+  }
+
+  if(unsubscribeRoom) unsubscribeRoom();
+
+  const roomHash = await hashRoomId(clean);
+  currentRoomRef = firebase.ref(db, `rooms/${roomHash}/tasks`);
+  workspaceId = clean;
+  localStorage.setItem('planner_workspace_id', workspaceId);
+  cloudMode = true;
+  cloudLoadedOnce = false;
+  updateSyncUI();
+
+  unsubscribeRoom = firebase.onValue(currentRoomRef, async snapshot => {
+    const cloudData = snapshot.val();
+
+    if(!cloudLoadedOnce){
+      cloudLoadedOnce = true;
+
+      if(cloudData === null && tasks.length){
+        await firebase.set(currentRoomRef, tasks);
+        $('#syncState').textContent = "Пространство создано. Локальные задачи загружены в облако.";
+        return;
+      }
+    }
+
+    tasks = Array.isArray(cloudData) ? cloudData : (cloudData ? Object.values(cloudData) : []);
+    saveLocal();
+    render();
+    $('#syncState').textContent = `Подключено к ID: ${workspaceId}`;
+  }, err => {
+    console.error(err);
+    $('#syncState').textContent = "Ошибка доступа к Firebase. Проверь databaseURL и Rules.";
+  });
+}
+
+async function persist(){
+  saveLocal();
+  if(cloudMode && currentRoomRef && firebase){
+    await firebase.set(currentRoomRef, tasks);
+  }
+}
+
+function disconnectCloud(){
+  if(unsubscribeRoom) unsubscribeRoom();
+  unsubscribeRoom = null;
+  currentRoomRef = null;
+  cloudMode = false;
+  workspaceId = '';
+  localStorage.removeItem('planner_workspace_id');
+  updateSyncUI();
+  $('#syncState').textContent = "Облако отключено. Данные снова хранятся только на этом устройстве.";
+}
+
+function updateSyncUI(){
+  const dot=$('#syncDot');
+  if(cloudMode){
+    dot.className='sync-dot online';
+    $('#syncText').textContent=`ID: ${workspaceId}`;
+  }else{
+    dot.className='sync-dot local';
+    $('#syncText').textContent='локальный режим';
+  }
+}
+
 function pad(n){return String(n).padStart(2,'0')}
-function iso(d){
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-}
-function fromISO(v){
-  const [y,m,d]=v.split('-').map(Number);
-  return new Date(y,m-1,d);
-}
+function iso(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function fromISO(v){const [y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d)}
 function getMonday(date){
   const d=new Date(date);
   const day=(d.getDay()+6)%7;
@@ -325,27 +494,18 @@ function getMonday(date){
   d.setHours(0,0,0,0);
   return d;
 }
-function addDays(date,n){
-  const d=new Date(date); d.setDate(d.getDate()+n); return d;
-}
-function esc(v=''){
-  return v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-}
+function addDays(date,n){const d=new Date(date);d.setDate(d.getDate()+n);return d}
+function esc(v=''){return v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1)}
-function prettyDate(d){
-  return new Intl.DateTimeFormat('ru-RU',{weekday:'long',day:'numeric',month:'long'}).format(d)
-}
+function prettyDate(d){return new Intl.DateTimeFormat('ru-RU',{weekday:'long',day:'numeric',month:'long'}).format(d)}
 function isOverdue(t){
   if(t.done || !t.date) return false;
   const now=new Date();
-  const deadline = fromISO(t.date);
+  const deadline=fromISO(t.date);
   if(t.time){
-    const [h,m]=t.time.split(':').map(Number);
-    deadline.setHours(h,m,0,0);
-  } else {
-    deadline.setHours(23,59,59,999);
-  }
-  return deadline < now;
+    const [h,m]=t.time.split(':').map(Number);deadline.setHours(h,m,0,0);
+  }else deadline.setHours(23,59,59,999);
+  return deadline<now;
 }
 function taskSort(a,b){
   const ad=(a.date||'9999-12-31')+' '+(a.time||'23:59');
@@ -356,28 +516,28 @@ function taskSort(a,b){
 function renderToday(){
   $('#todayLabel').textContent=capitalize(prettyDate(new Date()));
 }
-
 function renderInbox(){
-  const inboxTasks = tasks.filter(t => !t.done && (!t.date || isOverdue(t))).sort(taskSort);
+  const inboxTasks=tasks.filter(t=>!t.done&&(!t.date||isOverdue(t))).sort(taskSort);
   const box=$('#inbox');
   if(!inboxTasks.length){
     box.innerHTML='<div class="empty-inbox">Здесь будут задачи без даты и просроченные задачи.</div>';
     return;
   }
   box.innerHTML=inboxTasks.map(t=>`
-    <div class="inbox-card ${isOverdue(t)?'overdue':''}" onclick="openTask('${t.id}')">
+    <div class="inbox-card ${isOverdue(t)?'overdue':''}" data-task-id="${t.id}">
       <div class="inbox-title">${esc(t.title)}</div>
       <div class="badge">
         ${isOverdue(t)?'<span class="dot-alert"></span><span>не выполнено</span>':'<span>когда-нибудь</span>'}
       </div>
     </div>
   `).join('');
+
+  setupDraggables();
 }
 
 function renderWeekHeader(){
-  const monthFmt = new Intl.DateTimeFormat('ru-RU',{month:'long',year:'numeric'});
+  const monthFmt=new Intl.DateTimeFormat('ru-RU',{month:'long',year:'numeric'});
   $('#weekTitle').textContent=capitalize(monthFmt.format(weekStart));
-
   let html='<div class="tz">UTC+3</div>';
   const today=iso(new Date());
   const names=['пн','вт','ср','чт','пт','сб','вс'];
@@ -388,8 +548,6 @@ function renderWeekHeader(){
   $('#weekHead').innerHTML=html;
 }
 
-const startHour=8, endHour=23, pxPerHour=60;
-
 function renderCalendar(){
   renderWeekHeader();
   const grid=$('#calendarGrid');
@@ -398,8 +556,7 @@ function renderCalendar(){
 
   let html='<div class="time-col">';
   for(let h=startHour;h<=endHour;h++){
-    const top=(h-startHour)*pxPerHour;
-    html+=`<div class="time-label" style="top:${top}px">${pad(h)}:00</div>`;
+    html+=`<div class="time-label" style="top:${(h-startHour)*pxPerHour}px">${pad(h)}:00</div>`;
   }
   html+='</div>';
 
@@ -410,15 +567,16 @@ function renderCalendar(){
 
     for(let h=startHour;h<=endHour;h++){
       html+=`<div class="hour-line" style="top:${(h-startHour)*pxPerHour}px"></div>`;
+      if(h<endHour) html+=`<div class="half-line" style="top:${(h-startHour)*pxPerHour+pxPerHour/2}px"></div>`;
     }
 
-    const dayTasks=tasks.filter(t=>!t.done && t.date===dateKey && t.time).sort(taskSort);
+    const dayTasks=tasks.filter(t=>!t.done&&t.date===dateKey&&t.time).sort(taskSort);
     dayTasks.forEach(t=>{
       const [h,m]=t.time.split(':').map(Number);
-      if(h<startHour || h>endHour) return;
+      if(h<startHour||h>endHour) return;
       const top=((h-startHour)+(m/60))*pxPerHour;
       html+=`
-        <div class="event ${t.category}" style="top:${top}px;height:44px" onclick="openTask('${t.id}')">
+        <div class="event ${t.category}" data-task-id="${t.id}" style="top:${top}px;height:44px">
           <div class="time">${t.time}</div>
           <div>${esc(t.title)}</div>
         </div>`;
@@ -431,26 +589,27 @@ function renderCalendar(){
 
   const now=new Date();
   const nowIso=iso(now);
-  if(nowIso>=iso(weekStart) && nowIso<=iso(addDays(weekStart,6))){
-    const h=now.getHours(), m=now.getMinutes();
-    if(h>=startHour && h<=endHour){
+  if(nowIso>=iso(weekStart)&&nowIso<=iso(addDays(weekStart,6))){
+    const h=now.getHours(),m=now.getMinutes();
+    if(h>=startHour&&h<=endHour){
       const day=(now.getDay()+6)%7;
       const col=grid.children[day+1];
       const line=document.createElement('div');
       line.className='now-line';
       line.style.top=(((h-startHour)+(m/60))*pxPerHour)+'px';
-      line.style.left='0'; line.style.right='0';
+      line.style.left='0';line.style.right='0';
       col.appendChild(line);
     }
   }
+  setupDraggables();
 }
 
 function renderCompleted(){
   const completed=tasks.filter(t=>t.done).sort((a,b)=>(b.doneAt||'').localeCompare(a.doneAt||''));
   $('#completedList').innerHTML=completed.length?completed.map(t=>`
-    <div class="done-card" onclick="openTask('${t.id}')">
+    <div class="done-card" data-open-id="${t.id}">
       <strong>${esc(t.title)}</strong>
-      <small>${categoryNames[t.category] || 'Другое'}${t.date?' · '+t.date:''}</small>
+      <small>${categoryNames[t.category]||'Другое'}${t.date?' · '+t.date:''}</small>
     </div>
   `).join(''):'<div style="color:var(--muted)">Пока ничего нет.</div>';
 }
@@ -460,8 +619,104 @@ function render(){
   renderInbox();
   renderCalendar();
   renderCompleted();
+  updateSyncUI();
 }
 
+/* ---------- DRAG & DROP, mouse + touch ---------- */
+let dragState=null;
+
+function setupDraggables(){
+  document.querySelectorAll('[data-task-id]').forEach(el=>{
+    if(el.dataset.dragReady) return;
+    el.dataset.dragReady='1';
+    el.addEventListener('pointerdown',onDragStart);
+  });
+}
+
+function onDragStart(e){
+  if(e.button!==undefined && e.button!==0) return;
+  const el=e.currentTarget;
+  const taskId=el.dataset.taskId;
+  if(!taskId) return;
+
+  const rect=el.getBoundingClientRect();
+  const clone=el.cloneNode(true);
+  clone.classList.add('drag-clone');
+  clone.style.width=rect.width+'px';
+  clone.style.height=rect.height+'px';
+  clone.style.left=rect.left+'px';
+  clone.style.top=rect.top+'px';
+  document.body.appendChild(clone);
+
+  dragState={
+    taskId,
+    source:el,
+    clone,
+    offsetX:e.clientX-rect.left,
+    offsetY:e.clientY-rect.top,
+    moved:false
+  };
+
+  try{el.setPointerCapture(e.pointerId)}catch(_){}
+  window.addEventListener('pointermove',onDragMove,{passive:false});
+  window.addEventListener('pointerup',onDragEnd,{passive:false});
+  e.preventDefault();
+}
+
+function onDragMove(e){
+  if(!dragState) return;
+  dragState.moved=true;
+  const x=e.clientX-dragState.offsetX;
+  const y=e.clientY-dragState.offsetY;
+  dragState.clone.style.left=x+'px';
+  dragState.clone.style.top=y+'px';
+
+  document.querySelectorAll('.day-col').forEach(x=>x.classList.remove('drop-active'));
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const dayCol=el?.closest?.('.day-col');
+  if(dayCol) dayCol.classList.add('drop-active');
+  e.preventDefault();
+}
+
+async function onDragEnd(e){
+  if(!dragState) return;
+  document.querySelectorAll('.day-col').forEach(x=>x.classList.remove('drop-active'));
+
+  const state=dragState;
+  dragState=null;
+  window.removeEventListener('pointermove',onDragMove);
+  window.removeEventListener('pointerup',onDragEnd);
+
+  const target=document.elementFromPoint(e.clientX,e.clientY);
+  const dayCol=target?.closest?.('.day-col');
+
+  state.clone.remove();
+
+  if(!state.moved){
+    openTask(state.taskId);
+    return;
+  }
+
+  if(dayCol){
+    const rect=dayCol.getBoundingClientRect();
+    const rawY=Math.max(0,Math.min(rect.height,e.clientY-rect.top));
+    const minutesFromStart=Math.round((rawY/pxPerHour)*60/30)*30;
+    let totalMinutes=startHour*60+minutesFromStart;
+    totalMinutes=Math.max(startHour*60,Math.min(endHour*60,totalMinutes));
+    const hh=Math.floor(totalMinutes/60);
+    const mm=totalMinutes%60;
+
+    const t=tasks.find(x=>x.id===state.taskId);
+    if(t){
+      t.date=dayCol.dataset.date;
+      t.time=`${pad(hh)}:${pad(mm)}`;
+      await persist();
+      render();
+    }
+  }
+}
+
+/* ---------- CREATE / EDIT ---------- */
 $$('.cat-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     $$('.cat-btn').forEach(x=>x.classList.remove('active'));
@@ -470,105 +725,118 @@ $$('.cat-btn').forEach(btn=>{
   });
 });
 
-$('#quickForm').addEventListener('submit',e=>{
+$('#quickForm').addEventListener('submit',async e=>{
   e.preventDefault();
   tasks.push({
     id:crypto.randomUUID(),
     title:$('#taskTitle').value.trim(),
     description:$('#taskDesc').value.trim(),
-    date:$('#taskDate').value || '',
-    time:$('#taskTime').value || '',
+    date:$('#taskDate').value||'',
+    time:$('#taskTime').value||'',
     category:activeCategory,
     done:false,
     createdAt:new Date().toISOString()
   });
-  save();
+  await persist();
   e.target.reset();
   activeCategory='baltic';
   $$('.cat-btn').forEach(x=>x.classList.toggle('active',x.dataset.cat==='baltic'));
   render();
 });
 
-window.openTask = function(id){
+window.openTask=function(id){
   const t=tasks.find(x=>x.id===id);
-  if(!t) return;
-
+  if(!t)return;
   const overdue=isOverdue(t);
+
   $('#taskModalCard').innerHTML=`
     <h3>${esc(t.title)}</h3>
     <div class="modal-meta">
-      ${categoryNames[t.category] || 'Другое'}
-      ${t.date ? ' · '+t.date : ' · без даты'}
-      ${t.time ? ' · '+t.time : ''}
-      ${overdue ? ' · <span style="color:#c84c45">не выполнено</span>' : ''}
-      ${t.done ? ' · выполнено' : ''}
+      ${categoryNames[t.category]||'Другое'}
+      ${t.date?' · '+t.date:' · без даты'}
+      ${t.time?' · '+t.time:''}
+      ${overdue?' · <span style="color:#c84c45">не выполнено</span>':''}
+      ${t.done?' · выполнено':''}
     </div>
-    <div class="modal-description">${t.description ? esc(t.description) : '<span style="color:#999">Без описания</span>'}</div>
+    <div class="modal-description">${t.description?esc(t.description):'<span style="color:#999">Без описания</span>'}</div>
 
-    ${!t.done ? `
+    ${!t.done?`
       <div class="reschedule">
-        <input type="date" id="modalDate" value="${t.date || ''}">
-        <input type="time" id="modalTime" value="${t.time || ''}">
+        <input type="date" id="modalDate" value="${t.date||''}">
+        <input type="time" id="modalTime" value="${t.time||''}">
       </div>
       <div class="modal-actions">
-        <button class="done" onclick="completeTask('${t.id}')">✓ Выполнено</button>
-        <button onclick="rescheduleTask('${t.id}')">Изменить дату</button>
-        <button onclick="removeDate('${t.id}')">Без даты</button>
-        <button class="delete" onclick="deleteTask('${t.id}')">Удалить</button>
+        <button class="done" data-action="done" data-id="${t.id}">✓ Выполнено</button>
+        <button data-action="reschedule" data-id="${t.id}">Изменить дату</button>
+        <button data-action="nodate" data-id="${t.id}">Без даты</button>
+        <button class="delete" data-action="delete" data-id="${t.id}">Удалить</button>
       </div>
-    ` : `
+    `:`
       <div class="modal-actions">
-        <button onclick="restoreTask('${t.id}')">Вернуть в задачи</button>
-        <button class="delete" onclick="deleteTask('${t.id}')">Удалить</button>
+        <button data-action="restore" data-id="${t.id}">Вернуть в задачи</button>
+        <button class="delete" data-action="delete" data-id="${t.id}">Удалить</button>
       </div>
     `}
   `;
   $('#taskModal').classList.add('show');
 }
 
-window.completeTask=function(id){
+$('#taskModalCard').addEventListener('click',async e=>{
+  const btn=e.target.closest('button[data-action]');
+  if(!btn)return;
+  const id=btn.dataset.id;
+  const action=btn.dataset.action;
   const t=tasks.find(x=>x.id===id);
   if(!t)return;
-  t.done=true;t.doneAt=new Date().toISOString();
-  save(); closeTask(); render();
-}
-window.restoreTask=function(id){
-  const t=tasks.find(x=>x.id===id);
-  if(!t)return;
-  t.done=false;delete t.doneAt;
-  save(); closeTask(); render();
-}
-window.rescheduleTask=function(id){
-  const t=tasks.find(x=>x.id===id);
-  if(!t)return;
-  t.date=$('#modalDate').value || '';
-  t.time=$('#modalTime').value || '';
-  save(); closeTask(); render();
-}
-window.removeDate=function(id){
-  const t=tasks.find(x=>x.id===id);
-  if(!t)return;
-  t.date='';t.time='';
-  save(); closeTask(); render();
-}
-window.deleteTask=function(id){
-  if(!confirm('Удалить задачу?')) return;
-  tasks=tasks.filter(x=>x.id!==id);
-  save(); closeTask(); render();
-}
-function closeTask(){$('#taskModal').classList.remove('show')}
 
-$('#taskModal').addEventListener('click',e=>{if(e.target===$('#taskModal'))closeTask()});
+  if(action==='done'){t.done=true;t.doneAt=new Date().toISOString()}
+  if(action==='restore'){t.done=false;delete t.doneAt}
+  if(action==='reschedule'){t.date=$('#modalDate').value||'';t.time=$('#modalTime').value||''}
+  if(action==='nodate'){t.date='';t.time=''}
+  if(action==='delete'){
+    if(!confirm('Удалить задачу?')) return;
+    tasks=tasks.filter(x=>x.id!==id);
+  }
+  await persist();
+  $('#taskModal').classList.remove('show');
+  render();
+});
+
+$('#taskModal').addEventListener('click',e=>{
+  if(e.target===$('#taskModal'))$('#taskModal').classList.remove('show')
+});
+
+$('#completedList').addEventListener('click',e=>{
+  const card=e.target.closest('[data-open-id]');
+  if(card) openTask(card.dataset.openId);
+});
 
 $('#completedBtn').onclick=()=>$('#completedDrawer').classList.add('show');
 $('#closeCompleted').onclick=()=>$('#completedDrawer').classList.remove('show');
-$('#completedDrawer').addEventListener('click',e=>{if(e.target===$('#completedDrawer'))$('#completedDrawer').classList.remove('show')});
+$('#completedDrawer').addEventListener('click',e=>{
+  if(e.target===$('#completedDrawer'))$('#completedDrawer').classList.remove('show')
+});
+
+$('#syncBtn').onclick=()=>{
+  $('#workspaceId').value=workspaceId;
+  $('#syncDrawer').classList.add('show');
+};
+$('#closeSync').onclick=()=>$('#syncDrawer').classList.remove('show');
+$('#syncDrawer').addEventListener('click',e=>{
+  if(e.target===$('#syncDrawer'))$('#syncDrawer').classList.remove('show')
+});
+$('#connectWorkspace').onclick=()=>connectCloud($('#workspaceId').value);
+$('#disconnectWorkspace').onclick=disconnectCloud;
 
 $('#prevWeek').onclick=()=>{weekStart=addDays(weekStart,-7);renderCalendar()};
 $('#nextWeek').onclick=()=>{weekStart=addDays(weekStart,7);renderCalendar()};
 $('#todayWeek').onclick=()=>{weekStart=getMonday(new Date());renderCalendar()};
 
 render();
+
+if(workspaceId && firebaseConfigured){
+  connectCloud(workspaceId);
+}
 </script>
 </body>
 </html>
